@@ -22,7 +22,7 @@ spec:
             - until nc -z catalog-db 5432; do sleep 2; done
       containers:
         - name: catalog-service
-          image: wisnunugroho13/suilens-catalog-service:latest
+          image: alphasuthamedia/suilens-catalog-service:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 3001
@@ -106,7 +106,7 @@ spec:
             - until nc -z rabbitmq 5672; do sleep 2; done
       containers:
         - name: order-service
-          image: wisnunugroho13/suilens-order-service:latest
+          image: alphasuthamedia/suilens-order-service:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 3002
@@ -194,7 +194,7 @@ spec:
             - until nc -z rabbitmq 5672; do sleep 2; done
       containers:
         - name: notification-service
-          image: wisnunugroho13/suilens-notification-service:latest
+          image: alphasuthamedia/suilens-notification-service:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 3003
@@ -283,7 +283,7 @@ spec:
             - until nc -z notification-service 3003; do sleep 2; done
       containers:
         - name: frontend
-          image: wisnunugroho13/suilens-frontend:latest
+          image: alphasuthamedia/suilens-frontend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 5173

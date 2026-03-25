@@ -16,7 +16,7 @@ spec:
             - until nc -z catalog-db 5432; do sleep 2; done
       containers:
         - name: catalog-migrate
-          image: wisnunugroho13/suilens-catalog-service:latest
+          image: alphasuthamedia/suilens-catalog-service:latest
           imagePullPolicy: Always
           command: ["bunx", "drizzle-kit", "push"]
           env:
@@ -45,7 +45,7 @@ spec:
             - until nc -z order-db 5432; do sleep 2; done
       containers:
         - name: order-migrate
-          image: wisnunugroho13/suilens-order-service:latest
+          image: alphasuthamedia/suilens-order-service:latest
           imagePullPolicy: Always
           command: ["bunx", "drizzle-kit", "push"]
           env:
@@ -74,7 +74,7 @@ spec:
             - until nc -z notification-db 5432; do sleep 2; done
       containers:
         - name: notification-migrate
-          image: wisnunugroho13/suilens-notification-service:latest
+          image: alphasuthamedia/suilens-notification-service:latest
           imagePullPolicy: Always
           command: ["bunx", "drizzle-kit", "push"]
           env:
@@ -103,7 +103,7 @@ spec:
             - until nc -z catalog-db 5432; do sleep 2; done
       containers:
         - name: catalog-seed
-          image: wisnunugroho13/suilens-catalog-service:latest
+          image: alphasuthamedia/suilens-catalog-service:latest
           imagePullPolicy: Always
           command: ["bun", "run", "src/db/seed.ts"]
           env:
