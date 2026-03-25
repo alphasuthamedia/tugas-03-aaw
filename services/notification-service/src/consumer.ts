@@ -1,6 +1,7 @@
 import amqplib from "amqplib";
 import { db } from "./db";
 import { notifications } from "./db/schema";
+import { broadcastNotification } from "./realtime";
 
 const RABBITMQ_URL =
   process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672";
@@ -34,12 +35,26 @@ export async function startConsumer() {
             const { orderId, customerName, customerEmail, lensName } =
               event.data;
 
-            await db.insert(notifications).values({
-              orderId,
-              type: "order_placed",
-              recipient: customerEmail,
-              message: `Hi ${customerName}, your rental order for ${lensName} has been placed successfully. Order ID: ${orderId}`,
-            });
+            const [notification] = await db
+              .insert(notifications)
+              .values({
+                orderId,
+                type: "order_placed",
+                recipient: customerEmail,
+                message: `Hi ${customerName}, your rental order for ${lensName} has been placed successfully. Order ID: ${orderId}`,
+              })
+              .returning();
+
+            if (notification) {
+              broadcastNotification({
+                id: notification.id,
+                orderId: notification.orderId,
+                type: notification.type,
+                recipient: notification.recipient,
+                message: notification.message,
+                sentAt: notification.sentAt.toISOString(),
+              });
+            }
 
             console.log(`Notification recorded for order ${orderId}`);
           }

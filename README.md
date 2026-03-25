@@ -36,6 +36,16 @@ curl -X POST http://localhost:3002/api/orders \
 docker compose logs notification-service --tail 20
 ```
 
+## API Docs
+
+- Catalog Service Swagger: `http://localhost:3001/swagger`
+- Order Service Swagger: `http://localhost:3002/swagger`
+- Notification Service Swagger: `http://localhost:3003/swagger`
+
+## Real-Time Notifications
+
+- Notification WebSocket: `ws://localhost:3003/ws/notifications`
+
 ## Stop
 
 ```bash
