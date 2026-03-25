@@ -1,0 +1,78 @@
+# Job seed catalog — tunggu migrate-catalog selesai dulu lewat initContainer
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: seed-catalog
+  namespace: suilens-2306275935
+spec:
+  backoffLimit: 5
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: job-waiter
+      initContainers:
+        # Pastikan DB nyala dulu
+        - name: wait-catalog-db
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h catalog-db -p 5432 -U catalog; do
+                echo "Waiting for catalog-db...";
+                sleep 3;
+              done
+        # Tunggu migrate-catalog job complete
+        - name: wait-migrate-catalog
+          image: bitnami/kubectl:latest
+          command:
+            - sh
+            - -c
+            - |
+              until kubectl get job migrate-catalog -n suilens-2306275935 \
+                -o jsonpath='{.status.conditions[?(@.type=="Complete")].status}' \
+                | grep -q "True"; do
+                echo "Waiting for migrate-catalog to complete...";
+                sleep 5;
+              done
+      containers:
+        - name: seed-catalog
+          image: alphasuthamedia/suilens-catalog-service:latest
+          command: ["bun", "run", "src/db/seed.ts"]
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: CATALOG_DATABASE_URL
+---
+# ServiceAccount + ClusterRole biar kubectl di initContainer bisa baca job status
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: job-waiter
+  namespace: suilens-2306275935
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: job-reader
+  namespace: suilens-2306275935
+rules:
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: job-waiter-binding
+  namespace: suilens-2306275935
+subjects:
+  - kind: ServiceAccount
+    name: job-waiter
+    namespace: suilens-2306275935
+roleRef:
+  kind: Role
+  name: job-reader
+  apiGroup: rbac.authorization.k8s.io

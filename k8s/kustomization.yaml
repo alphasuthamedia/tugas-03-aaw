@@ -3,9 +3,10 @@ kind: Kustomization
 namespace: suilens-2306275935
 resources:
   - namespace.yaml
-  - configmap.yaml
   - secrets.yaml
+  - configmap.yaml
   - databases.yaml
   - rabbitmq.yaml
+  - migrate-job.yaml
+  - seed-job.yaml
   - apps.yaml
-  - ingress.yaml

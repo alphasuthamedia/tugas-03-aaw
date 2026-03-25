@@ -4,6 +4,7 @@ metadata:
   name: rabbitmq
   namespace: suilens-2306275935
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: rabbitmq

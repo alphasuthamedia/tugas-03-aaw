@@ -4,6 +4,7 @@ metadata:
   name: catalog-db
   namespace: suilens-2306275935
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: catalog-db
@@ -77,6 +78,7 @@ metadata:
   name: order-db
   namespace: suilens-2306275935
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: order-db
@@ -150,6 +152,7 @@ metadata:
   name: notification-db
   namespace: suilens-2306275935
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: notification-db

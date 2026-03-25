@@ -1,0 +1,98 @@
+# Job migrate catalog — tunggu catalog-db ready dulu lewat initContainer
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate-catalog
+  namespace: suilens-2306275935
+spec:
+  backoffLimit: 5
+  template:
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-catalog-db
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h catalog-db -p 5432 -U catalog; do
+                echo "Waiting for catalog-db...";
+                sleep 3;
+              done
+      containers:
+        - name: migrate-catalog
+          image: alphasuthamedia/suilens-catalog-service:latest
+          command: ["bunx", "drizzle-kit", "push"]
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: CATALOG_DATABASE_URL
+---
+# Job migrate order — tunggu order-db ready dulu
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate-order
+  namespace: suilens-2306275935
+spec:
+  backoffLimit: 5
+  template:
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-order-db
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h order-db -p 5432 -U orders; do
+                echo "Waiting for order-db...";
+                sleep 3;
+              done
+      containers:
+        - name: migrate-order
+          image: alphasuthamedia/suilens-order-service:latest
+          command: ["bunx", "drizzle-kit", "push"]
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: ORDER_DATABASE_URL
+---
+# Job migrate notification — tunggu notification-db ready dulu
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate-notification
+  namespace: suilens-2306275935
+spec:
+  backoffLimit: 5
+  template:
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-notification-db
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h notification-db -p 5432 -U notifications; do
+                echo "Waiting for notification-db...";
+                sleep 3;
+              done
+      containers:
+        - name: migrate-notification
+          image: alphasuthamedia/suilens-notification-service:latest
+          command: ["bunx", "drizzle-kit", "push"]
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: NOTIFICATION_DATABASE_URL

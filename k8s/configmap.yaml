@@ -9,6 +9,6 @@ data:
   NOTIFICATION_DATABASE_URL: postgres://notifications:notifications@notification-db:5432/notifications
   CATALOG_SERVICE_URL: http://catalog-service:3001
   RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-  VITE_CATALOG_API: /api/catalog
-  VITE_ORDER_API: /api/order
-  VITE_NOTIFICATION_WS: ws://suilens.local/ws
+  VITE_CATALOG_API: http://localhost:3001
+  VITE_ORDER_API: http://localhost:3002
+  VITE_NOTIFICATION_WS: ws://localhost:3003/ws/notifications
