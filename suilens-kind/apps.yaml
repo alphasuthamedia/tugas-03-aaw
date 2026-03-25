@@ -1,0 +1,187 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-service
+  namespace: suilens-2306275935
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: catalog-service
+  template:
+    metadata:
+      labels:
+        app: catalog-service
+    spec:
+      containers:
+        - name: catalog-service
+          image: alphasuthamedia/suilens-catalog-service:latest
+          ports:
+            - containerPort: 3001
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: CATALOG_DATABASE_URL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-service
+  namespace: suilens-2306275935
+spec:
+  type: ClusterIP
+  selector:
+    app: catalog-service
+  ports:
+    - port: 3001
+      targetPort: 3001
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  namespace: suilens-2306275935
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      containers:
+        - name: order-service
+          image: alphasuthamedia/suilens-order-service:latest
+          ports:
+            - containerPort: 3002
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: ORDER_DATABASE_URL
+            - name: CATALOG_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: CATALOG_SERVICE_URL
+            - name: RABBITMQ_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: RABBITMQ_URL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+  namespace: suilens-2306275935
+spec:
+  type: ClusterIP
+  selector:
+    app: order-service
+  ports:
+    - port: 3002
+      targetPort: 3002
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  namespace: suilens-2306275935
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      containers:
+        - name: notification-service
+          image: alphasuthamedia/suilens-notification-service:latest
+          ports:
+            - containerPort: 3003
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: NOTIFICATION_DATABASE_URL
+            - name: RABBITMQ_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: RABBITMQ_URL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  namespace: suilens-2306275935
+spec:
+  type: ClusterIP
+  selector:
+    app: notification-service
+  ports:
+    - port: 3003
+      targetPort: 3003
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: suilens-2306275935
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: alphasuthamedia/suilens-frontend:latest
+          ports:
+            - containerPort: 5173
+          env:
+            - name: VITE_CATALOG_API
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: VITE_CATALOG_API
+            - name: VITE_ORDER_API
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: VITE_ORDER_API
+            - name: VITE_NOTIFICATION_WS
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: VITE_NOTIFICATION_WS
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: suilens-2306275935
+spec:
+  type: ClusterIP
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 5173

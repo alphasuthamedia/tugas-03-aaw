@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: suilens-seed
+  namespace: suilens-2306275935
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: seed-catalog
+          image: alphasuthamedia/suilens-catalog-service:latest
+          command: ["bun", "run", "src/db/seed.ts"]
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: CATALOG_DATABASE_URL
