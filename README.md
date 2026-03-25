@@ -51,3 +51,24 @@ docker compose logs notification-service --tail 20
 ```bash
 docker compose down
 ```
+
+## DOCS HERE --- __ ---
+![k8s-cluster](./assets/k8s-cluster.png)
+
+![lense-list-all](./assets/lense-list-all.png)
+![lense-get-by-id](./assets/lense-get-by-id.png)
+![lens-health](./assets/lens-health.png)
+
+![order-create](./assets/order-create.png)
+![order-get-by-id](./assets/order-get-by-id.png)
+![order-list-all](./assets/order-list-all.png)
+![order-health](./assets/order-health.png)
+
+![notification-health](./assets/notification-health.png)
+
+![live-notification-before](./assets/live-notification-before.png)
+![live-notification-after](./assets/live-notification-after.png)
+
+![hit-mq](./assets/hit-mq.png)
+
+pakai kind karena laptopnya gak kuat kalau harus vm untuk simulasi bebrapa node
