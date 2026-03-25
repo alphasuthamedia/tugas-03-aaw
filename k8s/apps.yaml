@@ -1,0 +1,342 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-service
+  namespace: suilens-2306275084
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: catalog-service
+  template:
+    metadata:
+      labels:
+        app: catalog-service
+    spec:
+      initContainers:
+        - name: wait-for-catalog-db
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - until nc -z catalog-db 5432; do sleep 2; done
+      containers:
+        - name: catalog-service
+          image: wisnunugroho13/suilens-catalog-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3001
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: CATALOG_DATABASE_URL
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-service
+  namespace: suilens-2306275084
+  annotations:
+    metallb.io/address-pool: first-pool
+    metallb.io/loadBalancerIPs: 192.168.18.241
+spec:
+  loadBalancerIP: 192.168.18.241
+  type: LoadBalancer
+  selector:
+    app: catalog-service
+  ports:
+    - name: http
+      port: 3001
+      targetPort: 3001
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  namespace: suilens-2306275084
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      initContainers:
+        - name: wait-for-order-db
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - until nc -z order-db 5432; do sleep 2; done
+        - name: wait-for-catalog-service
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - until nc -z catalog-service 3001; do sleep 2; done
+        - name: wait-for-rabbitmq
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - until nc -z rabbitmq 5672; do sleep 2; done
+      containers:
+        - name: order-service
+          image: wisnunugroho13/suilens-order-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3002
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: ORDER_DATABASE_URL
+            - name: CATALOG_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: CATALOG_SERVICE_URL
+            - name: RABBITMQ_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: RABBITMQ_URL
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+  namespace: suilens-2306275084
+  annotations:
+    metallb.io/address-pool: first-pool
+    metallb.io/loadBalancerIPs: 192.168.18.244
+spec:
+  loadBalancerIP: 192.168.18.244
+  type: LoadBalancer
+  selector:
+    app: order-service
+  ports:
+    - name: http
+      port: 3002
+      targetPort: 3002
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  namespace: suilens-2306275084
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      initContainers:
+        - name: wait-for-notification-db
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - until nc -z notification-db 5432; do sleep 2; done
+        - name: wait-for-rabbitmq
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - until nc -z rabbitmq 5672; do sleep 2; done
+      containers:
+        - name: notification-service
+          image: wisnunugroho13/suilens-notification-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3003
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: NOTIFICATION_DATABASE_URL
+            - name: RABBITMQ_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: RABBITMQ_URL
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3003
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3003
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  namespace: suilens-2306275084
+  annotations:
+    metallb.io/address-pool: first-pool
+    metallb.io/loadBalancerIPs: 192.168.18.243
+spec:
+  loadBalancerIP: 192.168.18.243
+  type: LoadBalancer
+  selector:
+    app: notification-service
+  ports:
+    - name: http
+      port: 3003
+      targetPort: 3003
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: suilens-2306275084
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      initContainers:
+        - name: wait-for-catalog-service
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - until nc -z catalog-service 3001; do sleep 2; done
+        - name: wait-for-order-service
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - until nc -z order-service 3002; do sleep 2; done
+        - name: wait-for-notification-service
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - until nc -z notification-service 3003; do sleep 2; done
+      containers:
+        - name: frontend
+          image: wisnunugroho13/suilens-frontend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5173
+          env:
+            - name: VITE_CATALOG_API
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: VITE_CATALOG_API
+            - name: VITE_ORDER_API
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: VITE_ORDER_API
+            - name: VITE_NOTIFICATION_WS
+              valueFrom:
+                configMapKeyRef:
+                  name: suilens-config
+                  key: VITE_NOTIFICATION_WS
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 5173
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 5173
+            initialDelaySeconds: 20
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: suilens-2306275084
+  annotations:
+    metallb.io/address-pool: first-pool
+    metallb.io/loadBalancerIPs: 192.168.18.242
+spec:
+  loadBalancerIP: 192.168.18.242
+  type: LoadBalancer
+  selector:
+    app: frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 5173
