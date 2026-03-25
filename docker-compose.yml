@@ -59,6 +59,7 @@ services:
       retries: 5
 
   catalog-service:
+    image: wisnunugroho13/suilens-catalog-service:latest
     build: ./services/catalog-service
     ports:
       - "3001:3001"
@@ -69,6 +70,7 @@ services:
         condition: service_healthy
 
   order-service:
+    image: wisnunugroho13/suilens-order-service:latest
     build: ./services/order-service
     ports:
       - "3002:3002"
@@ -85,6 +87,7 @@ services:
         condition: service_started
 
   notification-service:
+    image: wisnunugroho13/suilens-notification-service:latest
     build: ./services/notification-service
     ports:
       - "3003:3003"
@@ -98,6 +101,7 @@ services:
         condition: service_healthy
 
   frontend:
+    image: wisnunugroho13/suilens-frontend:latest
     build: ./frontend/suilens-frontend
     ports:
       - "5173:5173"
